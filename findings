@@ -1,0 +1,10 @@
+Using the Bank Churn dataset, I conducted a series of SQL analyses in pgAdmin to explore patterns and drivers of customer activity. Through queries involving aggregation, conditional logic, and window functions, I identified key behavioral and demographic factors influencing churn.
+
+The analysis revealed that:
+France had the highest churn rate compared to other regions.
+Middle-aged customers (ages 40–49) showed the greatest likelihood of leaving the bank.
+Customers with only one product were significantly more likely to churn, suggesting lower engagement.
+Inactive members and those with lower credit scores were also more prone to exit.
+Customers with higher balances tended to remain, while those with lower balances showed greater volatility.
+
+Overall, the SQL analysis demonstrated how customer segmentation, behavioral metrics, and product engagement can be leveraged to identify at-risk customers and support data-driven retention strategies.
