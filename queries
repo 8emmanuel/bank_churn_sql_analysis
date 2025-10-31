@@ -1,0 +1,111 @@
+The data used in this analysis was found on Maven Analytics. 
+This data consists of account information for 10,000 customers at a European bank, including details on their credit score, balance, products, and whether they have churned.
+
+First step was to write a query creating a structured table so that I would be able to import my data into pgAdmin.
+The create table query is as follows:
+
+CREATE TABLE bank_churn (
+    customerid              BIGINT PRIMARY KEY,
+    surname                 VARCHAR(100),
+    credit_score            INT,
+    geography               VARCHAR(50),
+    gender                  VARCHAR(10),
+    age                     INT,
+    tenure                  INT,
+    balance                 NUMERIC(12,2),
+    num_of_products          INT,
+    has_cr_card             BOOLEAN,
+    is_active_member        BOOLEAN,
+    estimated_salary        NUMERIC(14,2),
+    exited                  BOOLEAN
+);
+
+Queries used for analysis below:
+
+1. Average account balance by Churn Status
+
+SELECT 
+    Exited, ROUND(AVG(Balance), 2) AS avg_balance
+FROM bank_churn
+GROUP BY Exited;
+
+2. Top 10 Customers by Highest Balance Who Exited
+
+SELECT 
+    CustomerId, Surname, Geography, Balance, Age, Credit_Score
+FROM bank_churn
+WHERE Exited = TRUE
+ORDER BY Balance DESC
+LIMIT 10;
+
+3. Overall Churn Rate
+
+SELECT 
+    ROUND(100.0 * SUM(CASE WHEN Exited THEN 1 ELSE 0 END) / COUNT(*), 2) AS churn_rate_percent
+FROM bank_churn;
+
+3. Churn Rate by Gender
+
+SELECT 
+    Gender, COUNT(*) AS total_customers,
+    ROUND(100.0 * SUM(CASE WHEN Exited THEN 1 ELSE 0 END) / COUNT(*), 2) AS churn_rate_percent
+FROM bank_churn
+GROUP BY Gender;
+
+4. Churn Rate by Geography
+
+SELECT 
+    Geography,
+    COUNT(*) AS total_customers,
+    SUM(CASE WHEN Exited THEN 1 ELSE 0 END) AS churned_customers,
+    ROUND(100.0 * SUM(CASE WHEN Exited THEN 1 ELSE 0 END) / COUNT(*), 2) AS churn_rate_percent
+FROM bank_churn
+GROUP BY Geography
+ORDER BY churn_rate_percent DESC;
+
+5. Churn by Active Membership
+
+SELECT 
+    Is_Active_Member,
+    ROUND(100.0 * SUM(CASE WHEN Exited THEN 1 ELSE 0 END) / COUNT(*), 2) AS churn_rate_percent,
+    ROUND(AVG(Estimated_Salary), 2) AS avg_salary
+FROM bank_churn
+GROUP BY Is_Active_Member;
+
+6. Churn vs Tenure
+
+SELECT 
+    Tenure, COUNT(*) AS total_customers,
+    ROUND(100.0 * SUM(CASE WHEN Exited THEN 1 ELSE 0 END) / COUNT(*), 2) AS churn_rate_percent
+FROM bank_churn
+GROUP BY Tenure
+ORDER BY Tenure;
+
+7. Impact of Credit Score on Churn
+
+SELECT 
+    ROUND(AVG(CreditScore), 0) AS avg_credit_score,
+    ROUND(AVG(CASE WHEN Exited THEN CreditScore END), 0) AS avg_churned_score,
+    ROUND(AVG(CASE WHEN NOT Exited THEN CreditScore END), 0) AS avg_retained_score
+FROM bank_churn;
+
+8. Customer Age Distribution & Churn Rate by Age Group
+
+WITH age_groups AS (
+    SELECT *,
+        CASE 
+            WHEN Age < 30 THEN 'Under 30'
+            WHEN Age BETWEEN 30 AND 39 THEN '30–39'
+            WHEN Age BETWEEN 40 AND 49 THEN '40–49'
+            WHEN Age BETWEEN 50 AND 59 THEN '50–59'
+            ELSE '60+'
+        END AS age_group
+    FROM bank_churn
+)
+SELECT 
+    age_group,
+    COUNT(*) AS total_customers,
+    ROUND(AVG(CAST(Exited AS INT)) * 100, 2) AS churn_rate_percent
+FROM age_groups
+GROUP BY age_group
+ORDER BY churn_rate_percent DESC;
